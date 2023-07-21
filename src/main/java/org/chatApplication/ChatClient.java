@@ -83,15 +83,16 @@ public class ChatClient {
     private void initialize() {
         try {
             String value = System.getenv("GUI");
-            if (value.equals("true")) startGUI();
+            if (value != null && value.equals("true")) startGUI(); // Check for null before calling equals
             System.out.print("[*] Enter the IP Address for the chat-server: ");
             SERVER_HOST = userInput.readLine();
             System.out.print("[*] Enter the port the server is listening on: ");
             SERVER_PORT = Integer.parseInt(userInput.readLine());
-        } catch (NumberFormatException | IOException ex){
+        } catch (NumberFormatException | IOException ex) {
             System.out.println("\u001B[31m[*] Make sure you use the correct format.\u001B[0m");
         }
     }
+
 
     private void startGUI() throws IOException {
         LocalhostServer.startServer();
