@@ -7,10 +7,18 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
+import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
+import java.util.LinkedList;
+import java.util.List;
+
 public class ChatClient {
     private String SERVER_HOST;
     private int SERVER_PORT;
     private static final BufferedReader userInput = new BufferedReader(new InputStreamReader(System.in));
+    private static final int MAX_MESSAGES_CLI = 50;
+    private static final int MAX_MESSAGES_GUI = 200;
+    private final List<String> lastMessages = new LinkedList<>();
 
     public static void main(String[] args) {
         ChatClient client = new ChatClient();
@@ -49,7 +57,9 @@ public class ChatClient {
                 try {
                     while ((message = in.readLine()) != null) {
                         if (!message.startsWith(finalUsername + ": ")) {
-                            System.out.println(message);
+                            String timestampedMessage = getCurrentTimeStamp() + " " + message;
+                            addMessageToList(timestampedMessage);
+                            System.out.println(timestampedMessage);
                         }
                     }
                 } catch (IOException e) {
@@ -57,6 +67,8 @@ public class ChatClient {
                 }
             });
             receiveThread.start();
+
+            printLastMessages();
 
             while (true) {
                 String message = userInput.readLine();
@@ -83,5 +95,23 @@ public class ChatClient {
 
     private void startGUI() throws IOException {
         LocalhostServer.startServer();
+    }
+
+    private void printLastMessages() {
+        int start = Math.max(0, lastMessages.size() - MAX_MESSAGES_CLI);
+        for (int i = start; i < lastMessages.size(); i++) {
+            System.out.println(lastMessages.get(i));
+        }
+    }
+
+    private void addMessageToList(String message) {
+        lastMessages.add(message);
+        if (lastMessages.size() > MAX_MESSAGES_GUI) {
+            lastMessages.remove(0);
+        }
+    }
+
+    private String getCurrentTimeStamp() {
+        return LocalTime.now().format(DateTimeFormatter.ofPattern("HH:mm"));
     }
 }

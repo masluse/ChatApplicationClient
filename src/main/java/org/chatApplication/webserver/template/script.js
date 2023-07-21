@@ -1,4 +1,6 @@
 document.addEventListener("DOMContentLoaded", function () {
+    loadChatHistory();
+
     const sendButton = document.getElementById("send-btn");
     const chatBox = document.getElementById("chat-box");
 
@@ -21,4 +23,19 @@ document.addEventListener("DOMContentLoaded", function () {
             sendButton.click();
         }
     });
+
+    function loadChatHistory() {
+        fetch('http://localhost:8000') // Replace this with the URL of your server
+            .then(response => response.json())
+            .then(data => {
+                data.forEach(message => {
+                    const messageDiv = document.createElement("div");
+                    messageDiv.classList.add("alert", "alert-primary", "my-2");
+                    messageDiv.innerText = `${message.user} (${new Date(message.timestamp).toLocaleTimeString()}): ${message.message}`;
+
+                    chatBox.appendChild(messageDiv);
+                });
+                chatBox.scrollTop = chatBox.scrollHeight;
+            });
+    }
 });

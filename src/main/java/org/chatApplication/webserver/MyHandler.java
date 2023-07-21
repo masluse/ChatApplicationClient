@@ -2,37 +2,38 @@ package org.chatApplication.webserver;
 
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
+import org.chatApplication.databaseHandler.MessageDao;
+import org.chatApplication.databaseHandler.model.Message;
+import org.json.JSONArray;
+import org.json.JSONObject;
 
-import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.nio.charset.StandardCharsets;
+import java.util.List;
 
 public class MyHandler implements HttpHandler {
+    private final MessageDao messageDao = new MessageDao();
+    private final int MESSAGE_LIMIT = 200;
+
     @Override
     public void handle(HttpExchange http) throws IOException {
-        String filePath = "src/main/java/org/chatApplication/webserver/template/index.html";
+        List<Message> messages = messageDao.getLastMessages(MESSAGE_LIMIT);
 
-        File file = new File(filePath);
-        if (file.exists()) {
-            byte[] fileContent = new byte[(int) file.length()];
-            FileInputStream fis = new FileInputStream(file);
-            fis.read(fileContent);
-            fis.close();
-
-            http.getResponseHeaders().set("Content-Type", "text/html");
-
-            http.sendResponseHeaders(200, fileContent.length);
-            OutputStream os = http.getResponseBody();
-            os.write(fileContent);
-            os.close();
-        } else {
-            String response = "404 Not Found";
-            http.sendResponseHeaders(404, response.length());
-            OutputStream os = http.getResponseBody();
-            os.write(response.getBytes());
-            os.close();
+        JSONArray messagesArray = new JSONArray();
+        for (Message message : messages) {
+            JSONObject messageObject = new JSONObject();
+            messageObject.put("user", message.getUsername());
+            messageObject.put("message", message.getText());
+            messageObject.put("timestamp", message.getTimestamp());
+            messagesArray.put(messageObject);
         }
-    }
 
+        String response = messagesArray.toString();
+        http.getResponseHeaders().set("Content-Type", "application/json");
+        http.sendResponseHeaders(200, response.getBytes(StandardCharsets.UTF_8).length);
+        OutputStream os = http.getResponseBody();
+        os.write(response.getBytes(StandardCharsets.UTF_8));
+        os.close();
+    }
 }

@@ -15,5 +15,6 @@ public class LocalhostServer {
         server.start();
 
         System.out.println("[*] Server started on localhost:" + port);
+        while (true) { Thread.onSpinWait(); } // This line will keep the server running indefinitely
     }
 }
