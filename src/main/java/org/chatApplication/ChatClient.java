@@ -5,15 +5,17 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
+import java.util.Scanner;
+import java.util.UUID;
 
 public class ChatClient {
-    private static final String SERVER_HOST = "5.75.163.158"; // Replace with the server's IP address
-    private static final int SERVER_PORT = 8080; // Replace with the server's port number
+    private static String SERVER_HOST;
+    private static int SERVER_PORT;
 
-    public static void main(String[] args) {
+    private void run() {
         try {
             Socket socket = new Socket(SERVER_HOST, SERVER_PORT);
-            System.out.println("[*] Connected to the server.");
+            System.out.println("\u001B[32m[*] Connected to the server " + SERVER_HOST + " on Port " + SERVER_PORT + "\u001B[0m");
 
             BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
             PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
@@ -22,11 +24,19 @@ public class ChatClient {
             System.out.print("Enter your username: ");
             String username = userInput.readLine();
 
+            String usernameColor = in.readLine();
+            System.out.println("You are now chatting with the username " + username + " in color: " + usernameColor);
+
+            if (username.isEmpty()) username = "guest " + UUID.randomUUID();
+
+            String finalUsername = username;
             Thread receiveThread = new Thread(() -> {
                 try {
                     String message;
                     while ((message = in.readLine()) != null) {
-                        System.out.println(message);
+                        if (!message.startsWith(finalUsername + ": ")) {
+                            System.out.println(message);
+                        }
                     }
                 } catch (IOException e) {
                     e.printStackTrace();
@@ -41,8 +51,26 @@ public class ChatClient {
             }
 
         } catch (IOException e) {
-            e.printStackTrace();
+            System.out.println("\u001B[31m[*] No connection could be made. Make sure you entered the correct IP and Port.\u001B[0m");
         }
+    }
+
+    public void initialize() {
+        Scanner sc = new Scanner(System.in);
+        System.out.print("Enter the IP Address -> ");
+        SERVER_HOST = sc.nextLine();
+        System.out.print("Enter the Port -> ");
+        try {
+            SERVER_PORT = Integer.parseInt(sc.nextLine());
+        } catch (NumberFormatException ex){
+            System.out.println("\u001B[31m[*] The port can only contain numbers.\u001B[0m");
+        }
+
+    }
+
+    public static void main(String[] args) {
+        new ChatClient().initialize();
+        new ChatClient().run();
     }
 }
 
