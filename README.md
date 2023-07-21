@@ -35,7 +35,7 @@ docker build -t my-java-app .
 Run the Docker image:
 
 ``` bash
-docker run -p 8080:8080 my-java-app
+docker run -it --rm my-java-app
 ```
 
 The application is running on port 8080.
