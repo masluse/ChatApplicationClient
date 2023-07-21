@@ -1,6 +1,6 @@
 # ChatApplicationServer
 
-This project is a simple chat server built on the Java socket programming model. It can handle multiple clients at a time, distributing messages among them.
+This project represents the client-side application for the ChatApplication project. It's a simple Java application that allows users to connect to the chat server and exchange messages with other connected clients.
 
 ## Prerequisites
 
@@ -42,9 +42,10 @@ The application is running on port 8080.
 
 ## Functionality
 
-- Accepts connections from multiple clients via sockets.
-- Receives messages from clients and distributes them to all connected clients.
-- Removes clients when they disconnect.
+- Connects to the chat server via a socket.
+- Reads the username input from the user and prepends it to all sent messages.
+- Receives messages from the server and prints them to the console.
+- Sends messages to the server which are then distributed to all connected clients.
 
 ## License
 
