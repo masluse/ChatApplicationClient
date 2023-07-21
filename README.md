@@ -1,4 +1,4 @@
-# ChatApplicationServer
+# ChatApplicationClient
 
 This project represents the client-side application for the ChatApplication project. It's a simple Java application that allows users to connect to the chat server and exchange messages with other connected clients.
 
