@@ -38,8 +38,6 @@ Run the Docker image:
 docker run -it --rm my-java-app
 ```
 
-The application is running on port 8080.
-
 ## Functionality
 
 - Connects to the chat server via a socket.
