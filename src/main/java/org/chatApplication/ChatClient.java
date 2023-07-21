@@ -9,30 +9,34 @@ import java.util.Scanner;
 import java.util.UUID;
 
 public class ChatClient {
-    private static String SERVER_HOST;
-    private static int SERVER_PORT;
+    private String SERVER_HOST;
+    private int SERVER_PORT;
+
+    public static void main(String[] args) {
+        ChatClient client = new ChatClient();
+        client.initialize();
+        client.run();
+    }
 
     private void run() {
-        try {
-            Socket socket = new Socket(SERVER_HOST, SERVER_PORT);
+        try (Socket socket = new Socket(SERVER_HOST, SERVER_PORT)) {
             System.out.println("\u001B[32m[*] Connected to the server " + SERVER_HOST + " on Port " + SERVER_PORT + "\u001B[0m");
 
             BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
             PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
 
-            BufferedReader userInput = new BufferedReader(new InputStreamReader(System.in));
+            Scanner userInput = new Scanner(System.in);
             System.out.print("Enter your username: ");
-            String username = userInput.readLine();
+            String username = userInput.nextLine();
 
             if (username.isEmpty()) username = "guest " + UUID.randomUUID();
             System.out.println("You are now chatting with the username " + username);
 
-            String finalUsername = username;
             Thread receiveThread = new Thread(() -> {
+                String message;
                 try {
-                    String message;
                     while ((message = in.readLine()) != null) {
-                        if (!message.startsWith(finalUsername + ": ")) {
+                        if (!message.startsWith(username + ": ")) {
                             System.out.println(message);
                         }
                     }
@@ -42,9 +46,8 @@ public class ChatClient {
             });
             receiveThread.start();
 
-            String message;
             while (true) {
-                message = userInput.readLine();
+                String message = userInput.nextLine();
                 out.println(username + ": " + message);
             }
 
@@ -53,7 +56,7 @@ public class ChatClient {
         }
     }
 
-    public void initialize() {
+    private void initialize() {
         Scanner sc = new Scanner(System.in);
         System.out.print("Enter the IP Address -> ");
         SERVER_HOST = sc.nextLine();
@@ -63,11 +66,5 @@ public class ChatClient {
         } catch (NumberFormatException ex){
             System.out.println("\u001B[31m[*] The port can only contain numbers.\u001B[0m");
         }
-
-    }
-
-    public static void main(String[] args) {
-        new ChatClient().initialize();
-        new ChatClient().run();
     }
 }
