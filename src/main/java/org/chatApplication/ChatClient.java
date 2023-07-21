@@ -1,12 +1,12 @@
 package org.chatApplication;
 
+import org.chatApplication.webserver.LocalhostServer;
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
-import java.util.UUID;
-
 public class ChatClient {
     private String SERVER_HOST;
     private int SERVER_PORT;
@@ -70,6 +70,8 @@ public class ChatClient {
 
     private void initialize() {
         try {
+            String value = System.getenv("GUI");
+            if (value.equals("true")) startGUI();
             System.out.print("[*] Enter the IP Address for the chat-server: ");
             SERVER_HOST = userInput.readLine();
             System.out.print("[*] Enter the port the server is listening on: ");
@@ -77,5 +79,9 @@ public class ChatClient {
         } catch (NumberFormatException | IOException ex){
             System.out.println("\u001B[31m[*] Make sure you use the correct format.\u001B[0m");
         }
+    }
+
+    private void startGUI() throws IOException {
+        LocalhostServer.startServer();
     }
 }
