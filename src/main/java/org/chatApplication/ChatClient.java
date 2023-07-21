@@ -25,18 +25,27 @@ public class ChatClient {
             BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
             PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
 
-            System.out.print("[*] Enter a username for this session: ");
-            String username = userInput.readLine();
+            // Add login phase before chat
+            String username;
+            do {
+                System.out.print("[*] Enter your username: ");
+                username = userInput.readLine();
+                System.out.print("[*] Enter your password: ");
+                String password = userInput.readLine();
+                out.println(username + ":" + password);
+                if (in.readLine().equals("Authenticated")) {
+                    System.out.println("[*] Authenticated successfully");
+                    break;
+                } else {
+                    System.out.println("[*] Authentication failed");
+                }
+            } while (true);
 
-            if (username.isEmpty()) username = "guest " + UUID.randomUUID();
-            System.out.println("[*] You are now chatting with the username " + username);
-
-            String finalUsername = username;
             Thread receiveThread = new Thread(() -> {
                 String message;
                 try {
                     while ((message = in.readLine()) != null) {
-                        if (!message.startsWith(finalUsername + ": ")) {
+                        if (!message.startsWith(username + ": ")) {
                             System.out.println(message);
                         }
                     }
