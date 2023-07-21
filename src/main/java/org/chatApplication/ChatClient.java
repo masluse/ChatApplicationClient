@@ -24,10 +24,8 @@ public class ChatClient {
             System.out.print("Enter your username: ");
             String username = userInput.readLine();
 
-            String usernameColor = in.readLine();
-            System.out.println("You are now chatting with the username " + username + " in color: " + usernameColor);
-
             if (username.isEmpty()) username = "guest " + UUID.randomUUID();
+            System.out.println("You are now chatting with the username " + username);
 
             String finalUsername = username;
             Thread receiveThread = new Thread(() -> {
@@ -73,4 +71,3 @@ public class ChatClient {
         new ChatClient().run();
     }
 }
-
