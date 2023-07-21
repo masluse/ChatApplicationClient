@@ -23,7 +23,7 @@
                 <configuration>
                     <archive>
                         <manifest>
-                            <mainClass>org.chatApplication.Main</mainClass>
+                            <mainClass>org.chatApplication.ChatClient</mainClass>
                         </manifest>
                     </archive>
                 </configuration>
