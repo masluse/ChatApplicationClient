@@ -27,16 +27,16 @@ public class ChatClient {
 
             Scanner userInput = new Scanner(System.in);
             System.out.print("Enter your username: ");
-            String username = userInput.nextLine();
+            final String[] username = {userInput.nextLine()};
 
-            if (username.isEmpty()) username = "guest " + UUID.randomUUID();
-            System.out.println("You are now chatting with the username " + username);
+            if (username[0].isEmpty()) username[0] = "guest " + UUID.randomUUID();
+            System.out.println("You are now chatting with the username " + username[0]);
 
             Thread receiveThread = new Thread(() -> {
                 String message;
                 try {
                     while ((message = in.readLine()) != null) {
-                        if (!message.startsWith(username + ": ")) {
+                        if (!message.startsWith(username[0] + ": ")) {
                             System.out.println(message);
                         }
                     }
@@ -48,7 +48,7 @@ public class ChatClient {
 
             while (true) {
                 String message = userInput.nextLine();
-                out.println(username + ": " + message);
+                out.println(username[0] + ": " + message);
             }
 
         } catch (IOException e) {
