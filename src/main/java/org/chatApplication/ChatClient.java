@@ -41,11 +41,14 @@ public class ChatClient {
                 }
             } while (true);
 
+            // Create a final variable to hold the username for use in the lambda expression
+            final String finalUsername = username;
+
             Thread receiveThread = new Thread(() -> {
                 String message;
                 try {
                     while ((message = in.readLine()) != null) {
-                        if (!message.startsWith(username + ": ")) {
+                        if (!message.startsWith(finalUsername + ": ")) {
                             System.out.println(message);
                         }
                     }
