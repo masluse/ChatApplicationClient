@@ -1,89 +1,118 @@
 package org.chatApplication;
 
-import javax.swing.*;
-import java.awt.*;
+import org.chatApplication.webserver.LocalhostServer;
+
 import java.io.BufferedReader;
+import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
-import java.util.Scanner;
+import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
+import java.util.LinkedList;
+import java.util.List;
 
 public class ChatClient {
-    private BufferedReader in;
-    private PrintWriter out;
-    private JFrame frame = new JFrame("Chat Application");
-    private JTextField textField = new JTextField(40);
-    private JTextArea messageArea = new JTextArea(8, 40);
+    private String SERVER_HOST;
+    private int SERVER_PORT;
+    private static final BufferedReader userInput = new BufferedReader(new InputStreamReader(System.in));
+    private static final int MAX_MESSAGES_CLI = 50;
+    private static final int MAX_MESSAGES_GUI = 200;
+    private final List<String> lastMessages = new LinkedList<>();
 
-    public ChatClient() {
-        // GUI Layout
-        textField.setEditable(false);
-        messageArea.setEditable(false);
-        frame.getContentPane().add(textField, BorderLayout.NORTH);
-        frame.getContentPane().add(new JScrollPane(messageArea), BorderLayout.CENTER);
-        frame.pack();
-
-        // Dark mode
-        frame.getContentPane().setBackground(Color.DARK_GRAY);
-        textField.setBackground(Color.DARK_GRAY);
-        textField.setForeground(Color.WHITE);
-        messageArea.setBackground(Color.DARK_GRAY);
-        messageArea.setForeground(Color.WHITE);
-
-        // Action for the text field
-        textField.addActionListener(e -> {
-            out.println(textField.getText());
-            textField.setText("");
-        });
+    public static void main(String[] args) {
+        ChatClient client = new ChatClient();
+        client.initialize();
+        client.run();
     }
 
-    private String getServerAddress() {
-        return JOptionPane.showInputDialog(
-                frame,
-                "Enter IP Address of the Server:",
-                "Welcome to the Chat Application",
-                JOptionPane.QUESTION_MESSAGE);
-    }
+    private void run() {
+        try (Socket socket = new Socket(SERVER_HOST, SERVER_PORT)) {
+            System.out.println("\u001B[32m[*] Connected to the server " + SERVER_HOST + " on Port " + SERVER_PORT + "\u001B[0m");
 
-    private String getName() {
-        return JOptionPane.showInputDialog(
-                frame,
-                "Choose a screen name:",
-                "Screen name selection",
-                JOptionPane.PLAIN_MESSAGE);
-    }
+            BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+            PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
 
-    private String getPassword() {
-        return JOptionPane.showInputDialog(
-                frame,
-                "Enter your password:",
-                "Password entry",
-                JOptionPane.PLAIN_MESSAGE);
-    }
+            // Add login phase before chat
+            String username;
+            do {
+                System.out.print("[*] Enter your username: ");
+                username = userInput.readLine();
+                System.out.print("[*] Enter your password: ");
+                String password = userInput.readLine();
+                out.println(username + ":" + password);
+                if (in.readLine().equals("Authenticated")) {
+                    System.out.println("[*] Authenticated successfully");
+                    break;
+                } else {
+                    System.out.println("[*] Authentication failed");
+                }
+            } while (true);
 
-    private void run() throws Exception {
-        String serverAddress = getServerAddress();
-        Socket socket = new Socket(serverAddress, 5000);
-        in = new BufferedReader(new InputStreamReader(
-                socket.getInputStream()));
-        out = new PrintWriter(socket.getOutputStream(), true);
+            // Create a final variable to hold the username for use in the lambda expression
+            final String finalUsername = username;
 
-        while (true) {
-            String line = in.readLine();
-            if (line.startsWith("SUBMITNAME")) {
-                out.println(getName() + ":" + getPassword());
-            } else if (line.startsWith("NAMEACCEPTED")) {
-                textField.setEditable(true);
-            } else if (line.startsWith("MESSAGE")) {
-                messageArea.append(line.substring(8) + "\n");
+            Thread receiveThread = new Thread(() -> {
+                String message;
+                try {
+                    while ((message = in.readLine()) != null) {
+                        if (!message.startsWith(finalUsername + ": ")) {
+                            String timestampedMessage = getCurrentTimeStamp() + " " + message;
+                            addMessageToList(timestampedMessage);
+                            System.out.println(timestampedMessage);
+                        }
+                    }
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            });
+            receiveThread.start();
+
+            printLastMessages();
+
+            while (true) {
+                String message = userInput.readLine();
+                out.println(username + ": " + message);
             }
+
+        } catch (IOException e) {
+            System.out.println("\u001B[31m[*] No connection could be made. Make sure you entered the correct IP and Port.\u001B[0m");
         }
     }
 
-    public static void main(String[] args) throws Exception {
-        ChatClient client = new ChatClient();
-        client.frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        client.frame.setVisible(true);
-        client.run();
+    private void initialize() {
+        try {
+            String value = System.getenv("GUI");
+            if (value != null && value.equals("true")) startGUI(); // Check for null before calling equals
+            System.out.print("[*] Enter the IP Address for the chat-server: ");
+            SERVER_HOST = userInput.readLine();
+            System.out.print("[*] Enter the port the server is listening on: ");
+            SERVER_PORT = Integer.parseInt(userInput.readLine());
+        } catch (NumberFormatException | IOException ex) {
+            System.out.println("\u001B[31m[*] Make sure you use the correct format.\u001B[0m");
+        }
+    }
+
+
+    private void startGUI() throws IOException {
+        LocalhostServer.startServer();
+    }
+
+    private void printLastMessages() {
+        int start = Math.max(0, lastMessages.size() - MAX_MESSAGES_CLI);
+        for (int i = start; i < lastMessages.size(); i++) {
+            System.out.println(lastMessages.get(i));
+        }
+    }
+
+    private void addMessageToList(String message) {
+        lastMessages.add(message);
+        if (lastMessages.size() > MAX_MESSAGES_GUI) {
+            lastMessages.remove(0);
+        }
+    }
+
+    private String getCurrentTimeStamp() {
+        return LocalTime.now().format(DateTimeFormatter.ofPattern("HH:mm"));
     }
 }
